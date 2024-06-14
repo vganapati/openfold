@@ -66,7 +66,7 @@ For the next log-in, follow these steps to run unit tests:
 ```
 module load conda
 export USERNAME=your_username
-cd $CFS/m3562/users/$USERNAME/cuda12/openfold
+cd $CFS/m3562/users/$USERNAME/openfold
 
 conda activate /global/cfs/cdirs/m3562/users/$USERNAME/openfold_env
 
