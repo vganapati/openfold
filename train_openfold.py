@@ -11,6 +11,7 @@ from pytorch_lightning.callbacks.model_checkpoint import ModelCheckpoint
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.strategies import DDPStrategy, DeepSpeedStrategy
 from pytorch_lightning.plugins.environments import MPIEnvironment
+from pytorch_lightning.plugins.environments import SLURMEnvironment
 from pytorch_lightning import seed_everything
 import torch
 import wandb
@@ -41,6 +42,7 @@ from openfold.utils.import_weights import (
 )
 from openfold.utils.logger import PerformanceLoggingCallback
 
+torch.set_float32_matmul_precision('medium')
 
 class OpenFoldWrapper(pl.LightningModule):
     def __init__(self, config):
@@ -412,7 +414,8 @@ def main(args):
         )
         loggers.append(wdb_logger)
 
-    cluster_environment = MPIEnvironment() if args.mpi_plugin else None
+    # cluster_environment = MPIEnvironment() if args.mpi_plugin else None
+    cluster_environment = SLURMEnvironment()
     if(args.deepspeed_config_path is not None):
         strategy = DeepSpeedStrategy(
             config=args.deepspeed_config_path,
@@ -425,7 +428,7 @@ def main(args):
         strategy = DDPStrategy(find_unused_parameters=False,
                                cluster_environment=cluster_environment)
     else:
-        strategy = None
+        strategy = 'auto'
  
     if(args.wandb and is_rank_zero):
         freeze_path = f"{wdb_logger.experiment.dir}/package_versions.txt"
