@@ -1,22 +1,16 @@
 from SFC_Torch import SFcalculator
 import reciprocalspaceship as rs
-import numpy as np
 import torch
-
-# pdb_file = '../SFcalculator_torch/tests/data/1dur.pdb'
-# mtz_file = '../SFcalculator_torch/tests/data/1dur.mtz'
+from torch.distributions.normal import Normal
 
 pdb_file = '../SFcalculator_torch/tests/data/6ry3.pdb'
 mtz_file = '../SFcalculator_torch/tests/data/6ry3_phases.mtz'
 
 sfcalculator = SFcalculator(pdb_file, mtz_file, expcolumns=['FP', 'SIGFP'], set_experiment=True, freeflag='FREE', testset_value=0)
 
-print("N_HKL: ", len(sfcalculator.HKL_array))
-print("N_atoms: ", sfcalculator.n_atoms)
-
 # This is necessary before the following calculation, for the solvent percentage and grid size
 # Typically you only have to do it once
-sfcalculator.inspect_data(verbose=True)
+sfcalculator.inspect_data(verbose=True) # solvent percentage and grid size
 
 # The results will be stored in sfcalculator.Fprotein_HKL and sfcalculator.Fmask_HKL, used for future calculation
 # You can also return the tensor by Return=True
@@ -33,38 +27,15 @@ sfcalculator.init_scales(requires_grad=True)
 # Get the Fmodel for future loss function construction
 Fmodel = sfcalculator.calc_ftotal()
 Fmodel_amplitude = torch.abs(Fmodel)
-sfcalculator.summarize()
 
-"""
-rs.read_mtz(mtz_file).FP # equivalent to sfcalculator.Fo (structure factors from reducing data)
-rs.read_mtz(mtz_file).SIGFP # equivalent to sfcalculator.SigF (error of structure factors from reducing data)
-rs.read_mtz(mtz_file).FC # deposited calculated value (structure factors that correspond to final solved atomic coordinates)
-rs.read_mtz(mtz_file).get_hkls() # equivalent to sfcalculator.HKL_array
-rs.read_mtz(mtz_file)["FC"][0,0,4]
-"""
+sfcalculator.Fo # structure factors from reducing data
+sfcalculator.SigF # error of structure factors from reducing data
 
-# check why # of HKLs is different
+# Make a Gaussian distribution and calculate likelihood of Fmodel_amplitude
 
-hkls_sfcalc = sfcalculator.HKL_array
-hkls_mtz = rs.read_mtz(mtz_file).get_hkls()
-max_hkls = hkls_mtz.shape[0]
+loss_per_sf = -Normal(sfcalculator.Fo,sfcalculator.SigF).log_prob(Fmodel_amplitude)
+total_loss = torch.sum(loss_per_sf)
 
-for ind in range(max_hkls):
-    hkls_mtz_i = hkls_mtz[ind]
-    if np.any(np.all((hkls_sfcalc-hkls_mtz_i)==0, axis=1)):
-        pass
-    else:
-        print(hkls_mtz_i)
-
-"""
-HKLs in the mtz file, but not in sfcalculator
-[ 1  0 52]
-[2 1 6]
-[ 4  1 58]
-[ 5  4 45]
-[ 7  0 42]
-[15 12 40]
-[17  9 32]
-"""
+print(total_loss)
 
 breakpoint()
