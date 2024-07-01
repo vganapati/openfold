@@ -19,7 +19,7 @@ def download_mtz_files(file_list, mmcif_directory, output_dir):
 
     ids_sf = []
     ids_no_sf = []
-    for pdb_id in file_list[:20]:
+    for pdb_id in file_list:
         url = f"{base_url}{pdb_id}.mtz"
         response = requests.get(url)
         
