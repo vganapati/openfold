@@ -26,10 +26,10 @@ sfcalculator.init_scales(requires_grad=True)
 
 # Get the Fmodel for future loss function construction
 Fmodel = sfcalculator.calc_ftotal()
-Fmodel_amplitude = torch.abs(Fmodel)
+Fmodel_amplitude = torch.abs(Fmodel) # calculated from the output of openfold
 
-sfcalculator.Fo # structure factors from reducing data
-sfcalculator.SigF # error of structure factors from reducing data
+sfcalculator.Fo # structure factors from reducing experimental data
+sfcalculator.SigF # error of structure factors from reducing experimental data
 
 # Make a Gaussian distribution and calculate likelihood of Fmodel_amplitude
 
