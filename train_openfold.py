@@ -113,6 +113,32 @@ class OpenFoldWrapper(pl.LightningModule):
                                                   features=batch,
                                                   ground_truth=ground_truth)
 
+        breakpoint() # compute experimental loss here with outputs and batch
+        """
+        batch is the input data
+        outputs is the output of OpenFold
+
+        > batch.keys()
+        > outputs.keys()
+
+        > outputs['final_atom_positions'] # batch_size x 256 (sequences cropped to 256 residues) x 37 x coordinates XYZ
+
+        atom37 representation: each heavy atom (i.e. does not include H atoms) corresponds to a given position in a 37-d array, e.g.
+        'C delta 1' has a specific spot
+        atoms not in the residue are zeroed out and indicated in a mask, see outputs['final_atom_mask'] which is batch_size x 256 x 37
+        In atom37, the representation for every kind of amino acid is the same, atom14 differs that there are only 14 slots, but each slot
+        refers to something different for different amino acids
+
+        SF Calculator creates a Gaussian of the distribution of possible structure factors
+        from experimental data. The loss is the likelihood of the output of OpenFold given the 
+        experimental distribution. The experimental data has a particular orientation which 
+        needs to be considered in computing the experimental loss. The OpenFold output should be rotated 
+        to best match the experimental output. Rotation details TBD 
+
+        SF Calculator needs the following values to compute experimental loss:
+        TBD
+
+        """
         # Compute loss
         loss, loss_breakdown = self.loss(
             outputs, batch, _return_breakdown=True
