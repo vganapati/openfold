@@ -136,9 +136,17 @@ class OpenFoldWrapper(pl.LightningModule):
         to best match the experimental output. Rotation details TBD 
 
         SF Calculator needs the following values to compute experimental loss:
-        TBD
+        unit cell info, space group info, atom name info, atom position info, atoms B-factor info and atoms occupancy info
+
+    
+        from openfold.np import protein
+        output_protein = protein.from_prediction(batch,outputs)
+
+        output_protein.to_modelcif()
+        output_protein.to_pdb()
 
         """
+        breakpoint()
         # Compute loss
         loss, loss_breakdown = self.loss(
             outputs, batch, _return_breakdown=True

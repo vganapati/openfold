@@ -3,7 +3,7 @@ import reciprocalspaceship as rs
 import torch
 from torch.distributions.normal import Normal
 
-pdb_file = '../SFcalculator_torch/tests/data/6ry3.pdb' # what will be created by openfold
+pdb_file = '../SFcalculator_torch/tests/data/6ry3.cif' # what will be created by openfold # can be either .cif or .pdb
 mtz_file = '../SFcalculator_torch/tests/data/6ry3_phases.mtz' # ground truth download from the PDB for comparison
 
 sfcalculator = SFcalculator(pdb_file, mtz_file, expcolumns=['FP', 'SIGFP'], set_experiment=True, freeflag='FREE', testset_value=0)
