@@ -16,6 +16,7 @@ from pytorch_lightning import seed_everything
 import torch
 import wandb
 from deepspeed.utils import zero_to_fp32 
+import reciprocalspaceship as rs
 
 from openfold.config import model_config
 from openfold.data.data_modules import OpenFoldDataModule, OpenFoldMultimerDataModule
@@ -139,27 +140,32 @@ class OpenFoldWrapper(pl.LightningModule):
         SF Calculator needs the following values to compute experimental loss:
         unit cell info, space group info, atom name info, atom position info, atoms B-factor info and atoms occupancy info
 
-    
-        from openfold.np import protein
-        output_protein = protein.from_prediction(batch, outputs)
-
         path to ground truth mtz:
         cd ../openfold_training/pdb_data/mtz_files/*.mtz
 
-        # example file_id = 2y7n
-        [chr(i) for i in abc]
-        import reciprocalspaceship as rs
-        rs_dataset = rs.read_mtz("../openfold_training/pdb_data/mtz_files/" + file_id + ".mtz")
-
-        output_protein.to_modelcif()
-        output_protein.to_pdb()
+        protein.to_modelcif(output_protein) # for output_protein created with numpy
+        protein.to_pdb(output_protein) # for output_protein created with numpy
 
         note: not all proteins have a corresponding mtz file (e.g. proteins with structure determined by cryo-EM)
         """
-        breakpoint() # compute experimental loss here with outputs and batch
-        file_ids = [[chr(i) for i in batch['file_id'][j]] for j in batch['file_id'].shape[0]]
-        output_protein = protein.from_prediction(batch, outputs)
+       
+       # compute experimental loss here with outputs and batch
 
+        file_ids = []
+        for j in range(batch['file_id'].shape[0]):
+            file_ids.append(''.join([chr(i) for i in batch['file_id'][j][:,0]])) 
+
+        mtz_files = []
+        for file_id in file_ids:
+            try:
+                mtz_files.append(rs.read_mtz("../openfold_training/pdb_data/mtz_files/" + file_id + ".mtz"))
+            except FileNotFoundError:
+                mtz_files.append(None)
+
+        breakpoint()
+        output_proteins = protein.from_prediction(batch, outputs, library=torch)
+
+        
         # Compute loss
         loss, loss_breakdown = self.loss(
             outputs, batch, _return_breakdown=True

@@ -17,6 +17,7 @@
 import dataclasses
 import io
 from typing import Any, Sequence, Mapping, Optional
+from types import ModuleType
 import re
 import string
 
@@ -78,8 +79,10 @@ class Protein:
     # Chain corresponding to each parent
     parents_chain_index: Optional[Sequence[int]] = None
 
+    library: Optional[ModuleType] = np
+
     def __post_init__(self):
-        if(len(np.unique(self.chain_index)) > PDB_MAX_CHAINS):
+        if(len(self.library.unique(self.chain_index)) > PDB_MAX_CHAINS):
             raise ValueError(
                 f"Cannot build an instance with more than {PDB_MAX_CHAINS} "
                 "chains because these cannot be written to PDB format"
@@ -594,7 +597,8 @@ def from_prediction(
     remove_leading_feature_dimension: bool = True,
     remark: Optional[str] = None,
     parents: Optional[Sequence[str]] = None,
-    parents_chain_index: Optional[Sequence[int]] = None
+    parents_chain_index: Optional[Sequence[int]] = None,
+    library: Optional[ModuleType] = np,
 ) -> Protein:
     """Assembles a protein from a prediction.
 
@@ -616,12 +620,12 @@ def from_prediction(
     if 'asym_id' in features:
         chain_index = _maybe_remove_leading_dim(features["asym_id"]) - 1
     else:
-        chain_index = np.zeros_like(
+        chain_index = library.zeros_like(
             _maybe_remove_leading_dim(features["aatype"])
         )
-    breakpoint()
+    
     if b_factors is None:
-        b_factors = np.zeros_like(result["final_atom_mask"])
+        b_factors = library.zeros_like(result["final_atom_mask"])
 
     return Protein(
         aatype=_maybe_remove_leading_dim(features["aatype"]),
@@ -633,4 +637,5 @@ def from_prediction(
         remark=remark,
         parents=parents,
         parents_chain_index=parents_chain_index,
+        library=library,
     )
