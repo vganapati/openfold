@@ -282,7 +282,10 @@ class OpenFoldSingleDataset(torch.utils.data.Dataset):
             [idx for _ in range(feats["aatype"].shape[-1])],
             dtype=torch.int64,
             device=feats["aatype"].device)
-
+        # hacky way to store file_id
+        feats["file_id"] = torch.tensor([ord(i) for i in file_id], 
+                                        dtype=torch.int64,
+                                        device=feats["aatype"].device)[:,None,None]
         return feats
 
     def __len__(self):

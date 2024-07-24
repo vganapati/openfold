@@ -619,7 +619,7 @@ def from_prediction(
         chain_index = np.zeros_like(
             _maybe_remove_leading_dim(features["aatype"])
         )
-
+    breakpoint()
     if b_factors is None:
         b_factors = np.zeros_like(result["final_atom_mask"])
 

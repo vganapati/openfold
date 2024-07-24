@@ -42,6 +42,8 @@ from openfold.utils.import_weights import (
 )
 from openfold.utils.logger import PerformanceLoggingCallback
 
+from openfold.np import protein
+
 torch.set_float32_matmul_precision('medium')
 
 class OpenFoldWrapper(pl.LightningModule):
@@ -113,7 +115,6 @@ class OpenFoldWrapper(pl.LightningModule):
                                                   features=batch,
                                                   ground_truth=ground_truth)
 
-        breakpoint() # compute experimental loss here with outputs and batch
         """
         batch is the input data
         outputs is the output of OpenFold
@@ -140,13 +141,25 @@ class OpenFoldWrapper(pl.LightningModule):
 
     
         from openfold.np import protein
-        output_protein = protein.from_prediction(batch,outputs)
+        output_protein = protein.from_prediction(batch, outputs)
+
+        path to ground truth mtz:
+        cd ../openfold_training/pdb_data/mtz_files/*.mtz
+
+        # example file_id = 2y7n
+        [chr(i) for i in abc]
+        import reciprocalspaceship as rs
+        rs_dataset = rs.read_mtz("../openfold_training/pdb_data/mtz_files/" + file_id + ".mtz")
 
         output_protein.to_modelcif()
         output_protein.to_pdb()
 
+        note: not all proteins have a corresponding mtz file (e.g. proteins with structure determined by cryo-EM)
         """
-        breakpoint()
+        breakpoint() # compute experimental loss here with outputs and batch
+        file_ids = [[chr(i) for i in batch['file_id'][j]] for j in batch['file_id'].shape[0]]
+        output_protein = protein.from_prediction(batch, outputs)
+
         # Compute loss
         loss, loss_breakdown = self.loss(
             outputs, batch, _return_breakdown=True
