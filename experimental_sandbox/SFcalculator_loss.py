@@ -1,12 +1,17 @@
-from SFC_Torch.Fmodel import SFcalculator
+import os
 import reciprocalspaceship as rs
 import torch
 from torch.distributions.normal import Normal
+from SFC_Torch.Fmodel import SFcalculator
 
-pdb_file = '../SFcalculator_torch/tests/data/6ry3.cif' # what will be created by openfold # can be either .cif or .pdb
-mtz_file = '../SFcalculator_torch/tests/data/6ry3_phases.mtz' # ground truth download from the PDB for comparison
+DATA_DIR = os.environ['DATA_DIR']
+path = DATA_DIR + '/pdb_data/mmcif_files/'
 
-sfcalculator = SFcalculator(pdb_file, mtz_file, expcolumns=['FP', 'SIGFP'], set_experiment=True, freeflag='FREE', testset_value=0)
+openfold_protein = None # what will be created by openfold
+pdb_file = DATA_DIR + '/pdb_data/mmcif_files/1jux.cif' # can be either .cif or .pdb
+mtz_file = DATA_DIR + '/pdb_data/mtz_files/1jux.mtz' # ground truth download from the PDB for comparison
+
+sfcalculator = SFcalculator(pdb_file, mtz_file, expcolumns=['FP', 'SIGFP'], set_experiment=True, freeflag='FREE', testset_value=0, openfold_protein=openfold_protein)
 
 # This is necessary before the following calculation, for the solvent percentage and grid size
 # Typically you only have to do it once

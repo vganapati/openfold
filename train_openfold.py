@@ -16,7 +16,6 @@ from pytorch_lightning import seed_everything
 import torch
 import wandb
 from deepspeed.utils import zero_to_fp32 
-import reciprocalspaceship as rs
 
 from openfold.config import model_config
 from openfold.data.data_modules import OpenFoldDataModule, OpenFoldMultimerDataModule
@@ -158,11 +157,12 @@ class OpenFoldWrapper(pl.LightningModule):
         mtz_files = []
         for file_id in file_ids:
             try:
-                mtz_files.append(rs.read_mtz("../openfold_training/pdb_data/mtz_files/" + file_id + ".mtz"))
+                mtz_files.append("../openfold_training/pdb_data/mtz_files/" + file_id + ".mtz")
             except FileNotFoundError:
                 mtz_files.append(None)
 
         breakpoint()
+        # XXX watch out if batch_idx is used!!
         output_proteins = protein.from_prediction(batch, outputs, library=torch)
 
         
