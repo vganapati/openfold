@@ -12,3 +12,4 @@ tests/test_data/
 cutlass/
 
 .DS_Store
+*.png

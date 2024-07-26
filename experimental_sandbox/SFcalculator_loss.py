@@ -1,4 +1,4 @@
-from SFC_Torch import SFcalculator
+from SFC_Torch.Fmodel import SFcalculator
 import reciprocalspaceship as rs
 import torch
 from torch.distributions.normal import Normal
@@ -37,5 +37,3 @@ loss_per_sf = -Normal(sfcalculator.Fo,sfcalculator.SigF).log_prob(Fmodel_amplitu
 total_loss = torch.sum(loss_per_sf)
 
 print(total_loss)
-
-breakpoint()
