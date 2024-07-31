@@ -7,11 +7,10 @@ from SFC_Torch.Fmodel import SFcalculator
 DATA_DIR = os.environ['DATA_DIR']
 path = DATA_DIR + '/pdb_data/mmcif_files/'
 
-openfold_protein = None # what will be created by openfold
 pdb_file = DATA_DIR + '/pdb_data/mmcif_files/1jux.cif' # can be either .cif or .pdb
 mtz_file = DATA_DIR + '/pdb_data/mtz_files/1jux.mtz' # ground truth download from the PDB for comparison
 
-sfcalculator = SFcalculator(pdb_file, mtz_file, expcolumns=['FP', 'SIGFP'], set_experiment=True, freeflag='FREE', testset_value=0, openfold_protein=openfold_protein)
+sfcalculator = SFcalculator(pdb_file, mtz_file, expcolumns=['FP', 'SIGFP'], set_experiment=True, freeflag='FREE', testset_value=0)
 
 # This is necessary before the following calculation, for the solvent percentage and grid size
 # Typically you only have to do it once
@@ -19,7 +18,7 @@ sfcalculator.inspect_data(verbose=True) # solvent percentage and grid size
 
 # The results will be stored in sfcalculator.Fprotein_HKL and sfcalculator.Fmask_HKL, used for future calculation
 # You can also return the tensor by Return=True
-sfcalculator.calc_fprotein(atoms_position_tensor=None, atoms_biso_tensor=None, atoms_occ_tensor=None, atoms_aniso_uw_tensor=None)
+sfcalculator.calc_fprotein(atoms_position_tensor=None, atoms_biso_tensor=None, atoms_occ_tensor=None, atoms_aniso_uw_tensor=None) # use values from openfold here
 sfcalculator.calc_fsolvent()
 
 # Get the unparameterized scales
