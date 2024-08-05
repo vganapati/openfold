@@ -7,8 +7,8 @@ from SFC_Torch.Fmodel import SFcalculator
 DATA_DIR = os.environ['DATA_DIR']
 path = DATA_DIR + '/pdb_data/mmcif_files/'
 
-pdb_file = DATA_DIR + '/pdb_data/mmcif_files/1jux.cif' # can be either .cif or .pdb
-mtz_file = DATA_DIR + '/pdb_data/mtz_files/1jux.mtz' # ground truth download from the PDB for comparison
+pdb_file = DATA_DIR + '/pdb_data/mmcif_files/4fid.cif' # can be either .cif or .pdb # 1jux.cif
+mtz_file = DATA_DIR + '/pdb_data/mtz_files/4fid.mtz' # ground truth download from the PDB for comparison # 1jux.mtz
 
 sfcalculator = SFcalculator(pdb_file, mtz_file, expcolumns=['FP', 'SIGFP'], set_experiment=True, freeflag='FREE', testset_value=0)
 

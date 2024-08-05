@@ -70,9 +70,7 @@ def get_experimental_loss(outputs, batch):
                 chain_id = [chain_id_inverse_mapping[i.cpu().numpy().item()] for i in output_proteins.chain_index[ind]]
 
                 breakpoint()
-
-                # XXX Check consistency between amino acid starting index of sfcalculator and openfold and cif file
-                residue_index = output_proteins.residue_index[ind] - 4 # XXX is the 4 a consistent error?
+                residue_index = output_proteins.residue_index[ind]
                 # output_proteins.residue_index[ind][:,None].repeat(1,37)
                 
                 amino_acid_code = [residue_list[i] for i in output_proteins.aatype[ind]]
