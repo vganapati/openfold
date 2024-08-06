@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 from openfold.np import protein, residue_constants
 import os
@@ -28,6 +29,8 @@ def fape_align():
      # XXX write me
      pass
 
+
+
 def get_experimental_loss(outputs, batch):
         file_ids = []
         for j in range(batch['file_id'].shape[0]): # each protein of the batch
@@ -45,6 +48,7 @@ def get_experimental_loss(outputs, batch):
         """
         
         output_proteins = protein.from_prediction(batch, outputs, remove_leading_feature_dimension=False, library=torch)
+        num_residues = output_proteins.atom_mask.shape[1]
 
         for ind, file_id in enumerate(file_ids):
             if mtz_files[ind] is not None:
@@ -61,35 +65,47 @@ def get_experimental_loss(outputs, batch):
                 # The results will be stored in sfcalculator.Fprotein_HKL and sfcalculator.Fmask_HKL, used for future calculation
                 # You can also return the tensor by Return=True
 
-                # reorder the positions in openfold output to match those in sfcalculator.cra_name
-                # The positions in the reordered INPUT should match those in sfcalculator._atom_pos_orth
+                """ 
+                reorder the positions in openfold output to match those in sfcalculator.cra_name
+                The positions in the reordered output should match those in sfcalculator._atom_pos_orth
 
-                # for every unmasked atom in output_proteins[ind], we need: chain_id-residue_index-amino_acid_code-atom_name
-                # output_proteins.atom_mask == 1 for any existing atom
-
-                chain_id = [chain_id_inverse_mapping[i.cpu().numpy().item()] for i in output_proteins.chain_index[ind]]
-
-                breakpoint()
-                residue_index = output_proteins.residue_index[ind]
-                # output_proteins.residue_index[ind][:,None].repeat(1,37)
-                
-                amino_acid_code = [residue_list[i] for i in output_proteins.aatype[ind]]
-
-                atom_name = residue_constants.atom_types # ['N', 'CA', 'C', 'CB', 'O', 'CG', ... ]
-                
-                output_proteins.atom_mask[ind]
+                output_proteins.atom_mask == 1 for any existing atom
+                for every unmasked atom in the output protein, we need: "chain_id"-"residue_index"-"amino_acid_code"-"atom_name"
+                """
+            
+                """
+                # This code snippet would get all the relevant quantities from sfcalculator:
 
                 for atom in sfcalculator.cra_name:
                     ref_chain_letter, ref_residue_index, ref_amino_acid_code, ref_atom_name = atom.split('-')
-                    
-                output_proteins.atom_positions[ind]
+                """
+            
+                chain_id = np.tile(np.array([chain_id_inverse_mapping[i.cpu().numpy().item()] for i in output_proteins.chain_index[ind]])[:,None], [1,residue_constants.atom_type_num])
+                residue_index = output_proteins.residue_index[ind][:,None].repeat(1,residue_constants.atom_type_num).cpu().numpy().astype('<U100')            
+                amino_acid_code = np.tile(np.array([residue_list[i] for i in output_proteins.aatype[ind]])[:,None], [1,residue_constants.atom_type_num])
+                atom_name = np.tile(np.array(residue_constants.atom_types)[None],[num_residues,1]) # ['N', 'CA', 'C', 'CB', 'O', 'CG', ... ]
+                
+                mask = output_proteins.atom_mask[ind].cpu().numpy() == 1
+                output_cra_name = np.char.add(np.char.add(np.char.add(np.char.add(chain_id[mask], '-'), np.char.add(residue_index[mask], '-')), np.char.add(amino_acid_code[mask], '-')), atom_name[mask]).tolist()
+                
+                for item in output_cra_name:
+                    print(item)
+                    try:
+                        sfcalculator.cra_name.index(item)
+                    except ValueError:
+                         breakpoint()
+                
+                breakpoint()
+                sfcalculator_inds = [sfcalculator.cra_name.index(item) for item in output_cra_name if item in sfcalculator.cra_name]
 
-
+                breakpoint()
+                output_proteins.atom_positions[ind][output_proteins.atom_mask[ind]==1]
 
                 atoms_position_tensor_pred_reordered = format_openfold_output(output_proteins, ind, sfcalculator.cra_name)
                 
                 # Align the positions to some reference
                 aligned_pos  = kabsch_align(reorderd_pred, sfcalculator.atom_pos_orth)
+                fape_align
 
                 # XXX Need to align and replace
 
