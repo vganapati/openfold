@@ -16,20 +16,9 @@ data_dir_path = os.environ['DATA_DIR']
 residue_list = [residue_constants.restype_1to3[res] for res in residue_constants.restypes]
 residue_list.append('OTHER')
 
-def format_openfold_output(output_proteins, ind, cra_name):
+def kabsch_or_fape_align(output_atoms_positions, sfcalculator_corresponding_atoms):
     # XXX write me
-    # output_proteins[“ final_atom_positions”], output_proteins[“ atom_mask”]
-    return atoms_position_tensor
-
-def kabsch_align():
-     # XXX write me
-     pass
-
-def fape_align():
-     # XXX write me
-     pass
-
-
+    return(output_atoms_positions)
 
 def get_experimental_loss(outputs, batch):
         file_ids = []
@@ -89,28 +78,39 @@ def get_experimental_loss(outputs, batch):
                 output_cra_name = np.char.add(np.char.add(np.char.add(np.char.add(chain_id[mask], '-'), np.char.add(residue_index[mask], '-')), np.char.add(amino_acid_code[mask], '-')), atom_name[mask]).tolist()
                 
                 for item in output_cra_name:
-                    print(item)
+                    if 'OTHER' in item:
+                         breakpoint()
                     try:
                         sfcalculator.cra_name.index(item)
                     except ValueError:
-                         breakpoint()
-                
-                breakpoint()
+                         pass
+
                 sfcalculator_inds = [sfcalculator.cra_name.index(item) for item in output_cra_name if item in sfcalculator.cra_name]
+                used_output = [item in sfcalculator.cra_name for item in output_cra_name]
 
                 breakpoint()
-                output_proteins.atom_positions[ind][output_proteins.atom_mask[ind]==1]
-
-                atoms_position_tensor_pred_reordered = format_openfold_output(output_proteins, ind, sfcalculator.cra_name)
                 
+                """
+                # Test
+                aligned_pos = batch['all_atom_positions'][ind][output_proteins.atom_mask[ind]==1][used_output] # use to check
+
+                modified_sfcalculator = sfcalculator._atom_pos_orth.clone().detach()
+                modified_sfcalculator[sfcalculator_inds] = aligned_pos
+
+                sfcalculator.calc_fprotein(atoms_position_tensor=sfcalculator._atom_pos_orth, atoms_biso_tensor=None, atoms_occ_tensor=None, atoms_aniso_uw_tensor=None, Return=True)
+                sfcalculator.calc_fprotein(atoms_position_tensor=modified_sfcalculator, atoms_biso_tensor=None, atoms_occ_tensor=None, atoms_aniso_uw_tensor=None, Return=True)
+                """
+
+                output_atoms_positions = output_proteins.atom_positions[ind][output_proteins.atom_mask[ind]==1][used_output]
+                sfcalculator_corresponding_atoms = sfcalculator.atom_pos_orth[sfcalculator_inds]
+
                 # Align the positions to some reference
-                aligned_pos  = kabsch_align(reorderd_pred, sfcalculator.atom_pos_orth)
-                fape_align
+                aligned_pos  = kabsch_or_fape_align(output_atoms_positions, sfcalculator_corresponding_atoms)
+                
+                # Replace ground truth PDB with predicted positions of atoms
+                sfcalculator._atom_pos_orth[sfcalculator_inds] = aligned_pos
 
-                # XXX Need to align and replace
-
-                # XXX use plddt for atoms_biso_tensor?
-                sfcalculator.calc_fprotein(atoms_position_tensor=aligned_pos+atoms_not_solved, atoms_biso_tensor=None, atoms_occ_tensor=None, atoms_aniso_uw_tensor=None)
+                sfcalculator.calc_fprotein(atoms_position_tensor=sfcalculator._atom_pos_orth, atoms_biso_tensor=None, atoms_occ_tensor=None, atoms_aniso_uw_tensor=None)
                 sfcalculator.calc_fsolvent()
 
                 # Get the unparameterized scales
@@ -135,3 +135,4 @@ def get_experimental_loss(outputs, batch):
                 total_loss = torch.sum(loss_per_sf)
 
                 print(total_loss)
+                return(total_loss)

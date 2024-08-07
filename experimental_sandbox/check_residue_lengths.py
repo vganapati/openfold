@@ -16,11 +16,9 @@ residue_lengths = []
 
 for protein_filepath in protein_filepaths[:num_truncate]: 
     protein_model = PDBParser(protein_filepath) 
-    residue_length = protein_model.atom_pos.shape[0]
+    residue_length = len(set(protein_model.res_id))
     residue_lengths.append(residue_length)
-    # print(residue_length)
-    if residue_length<256:
-        print(protein_filepath)
+    print(residue_length)
 
 print("Median Value ", np.median(residue_lengths))
 
