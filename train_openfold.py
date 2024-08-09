@@ -126,8 +126,7 @@ class OpenFoldWrapper(pl.LightningModule):
 
         # Log it
         self._log(loss_breakdown, batch, outputs)
-
-        return loss
+        return loss + loss_experimental
 
     def on_before_zero_grad(self, *args, **kwargs):
         self.ema.update(self.model)
