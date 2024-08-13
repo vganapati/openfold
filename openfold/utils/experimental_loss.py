@@ -52,8 +52,7 @@ def get_experimental_loss(outputs, batch):
 
             # This is necessary before the following calculation, for the solvent percentage and grid size
             # Typically you only have to do it once
-            sfcalculator.inspect_data(verbose=True) # solvent percentage and grid size
-
+            sfcalculator.inspect_data(spacing=4.5, sample_rate=3.0, verbose=True) # solvent percentage and grid size
             # The results will be stored in sfcalculator.Fprotein_HKL and sfcalculator.Fmask_HKL, used for future calculation
             # You can also return the tensor by Return=True
 
@@ -105,6 +104,11 @@ def get_experimental_loss(outputs, batch):
             aligned_pos  = kabsch_or_fape_align(output_atoms_positions, sfcalculator_corresponding_atoms)
             
             # Replace ground truth PDB with predicted positions of atoms
+            # print('XXXXXX')
+            # breakpoint()
+            # print(aligned_pos)
+            # print(sfcalculator_inds)
+            # print(sfcalculator._atom_pos_orth)
             sfcalculator._atom_pos_orth[sfcalculator_inds] = aligned_pos
 
             sfcalculator.calc_fprotein(atoms_position_tensor=sfcalculator._atom_pos_orth, atoms_biso_tensor=None, atoms_occ_tensor=None, atoms_aniso_uw_tensor=None)
