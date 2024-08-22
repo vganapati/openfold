@@ -47,8 +47,7 @@ def get_experimental_loss(outputs, batch):
 
             pdb_file = train_data_dir_path + '/' + file_id + '.cif' # can be either .cif or .pdb
             mtz_file = data_dir_path + '/pdb_data/mtz_files/' + file_id + '.mtz' # ground truth download from the PDB for comparison
-
-            sfcalculator = SFcalculator(pdb_file, mtz_file, expcolumns=['FP', 'SIGFP'], set_experiment=True, freeflag='FREE', testset_value=0, random_sample=True)
+            sfcalculator = SFcalculator(pdb_file, mtz_file, expcolumns=['FP', 'SIGFP'], set_experiment=True, freeflag='FREE', testset_value=0, random_sample=True, device=batch['all_atom_positions'].device)
 
             # This is necessary before the following calculation, for the solvent percentage and grid size
             # Typically you only have to do it once
@@ -70,16 +69,6 @@ def get_experimental_loss(outputs, batch):
             for atom in sfcalculator.cra_name:
                 ref_chain_letter, ref_residue_index, ref_amino_acid_code, ref_atom_name = atom.split('-')
             """
-        
-            """
-            # XXX TODO: go through all atoms in sfcalculator.cra_name and add to output_atoms_positions
-            # Use broadcasting or vmap to parallelize
-
-            output_atoms_positions = []
-            for atom in sfcalculator.cra_name:
-                ref_chain_letter, ref_residue_index, ref_amino_acid_code, ref_atom_name = atom.split('-')
-                # find corresponding position in output_proteins and add to output_atoms_positions
-            """
 
             chain_id = np.tile(np.array([chain_id_inverse_mapping[i.cpu().numpy().item()] for i in output_proteins.chain_index[ind]])[:,None], [1,residue_constants.atom_type_num])
             residue_index = output_proteins.residue_index[ind][:,None].repeat(1,residue_constants.atom_type_num).cpu().numpy().astype('<U100')            
@@ -99,12 +88,9 @@ def get_experimental_loss(outputs, batch):
             """
             # Test
             aligned_pos = batch['all_atom_positions'][ind][output_proteins.atom_mask[ind]==1][used_output] # use to check
-
-            modified_sfcalculator = sfcalculator._atom_pos_orth.clone().detach()
-            modified_sfcalculator[sfcalculator_inds] = aligned_pos
-
-            sfcalculator.calc_fprotein(atoms_position_tensor=sfcalculator._atom_pos_orth, atoms_biso_tensor=None, atoms_occ_tensor=None, atoms_aniso_uw_tensor=None, Return=True)
-            sfcalculator.calc_fprotein(atoms_position_tensor=modified_sfcalculator, atoms_biso_tensor=None, atoms_occ_tensor=None, atoms_aniso_uw_tensor=None, Return=True)
+            print(aligned_pos)
+            print(sfcalculator._atom_pos_orth[sfcalculator_inds])
+            assert torch.all(aligned_pos==sfcalculator._atom_pos_orth[sfcalculator_inds])
             """
 
             output_atoms_positions = output_proteins.atom_positions[ind][output_proteins.atom_mask[ind]==1][used_output] # prediction
@@ -140,7 +126,6 @@ def get_experimental_loss(outputs, batch):
             sfcalculator.Fo # structure factors from reducing experimental data
             sfcalculator.SigF # error of structure factors from reducing experimental data
             """
-            
             # Make a Gaussian distribution and calculate likelihood of Fmodel_amplitude
 
             loss_per_sf = -Normal(sfcalculator.Fo,sfcalculator.SigF).log_prob(Fmodel_amplitude)
