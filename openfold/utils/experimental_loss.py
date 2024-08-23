@@ -16,9 +16,26 @@ data_dir_path = os.environ['DATA_DIR']
 residue_list = [residue_constants.restype_1to3[res] for res in residue_constants.restypes]
 residue_list.append('OTHER')
 
-def kabsch_or_fape_align(output_atoms_positions, sfcalculator_corresponding_atoms):
-    # XXX write function
-    # find centroids and subtract
+def kabsch_or_fape_align(output_atoms_positions, sfcalculator_corresponding_atoms, weights=None):
+    """
+    Reference: https://hunterheidenreich.com/posts/kabsch_algorithm/
+    Aligning the output_atoms_positions to sfcalculator_corresponding_atoms
+
+    output_atoms_positions is p
+    sfcalculator_corresponding_atoms is q 
+    """
+    breakpoint()
+    if weights is None:
+        weights = torch.ones(len(output_atoms_positions), device=output_atoms_positions.device)[:,None]
+    output_atoms_centroid = torch.mean(output_atoms_positions, axis=0)
+    sfcalculator_atoms_centroid = torch.mean(sfcalculator_corresponding_atoms, axis=0)
+
+    translation = sfcalculator_atoms_centroid - output_atoms_centroid
+    output_atoms_positions -= output_atoms_centroid
+    sfcalculator_corresponding_atoms -= sfcalculator_atoms_centroid
+
+    cross_covariance = output_atoms_positions[:,:,None] @ sfcalculator_corresponding_atoms[:,None,:]
+    # cross_covariance_svd = 
     return(output_atoms_positions)
 
 def get_experimental_loss(outputs, batch):
