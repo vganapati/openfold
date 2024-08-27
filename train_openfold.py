@@ -116,7 +116,6 @@ class OpenFoldWrapper(pl.LightningModule):
 
 
         # compute experimental loss here with batch(inputs) and outputs
-
         loss_experimental = get_experimental_loss(outputs, batch)
 
         # Compute loss
@@ -126,7 +125,10 @@ class OpenFoldWrapper(pl.LightningModule):
 
         # Log it
         self._log(loss_breakdown, batch, outputs)
-        return loss + loss_experimental
+        if args.use_experimental_loss:
+            return loss_experimental
+        else:
+            return loss
 
     def on_before_zero_grad(self, *args, **kwargs):
         self.ema.update(self.model)
@@ -694,6 +696,10 @@ if __name__ == "__main__":
         "--accumulate_grad_batches", type=int, default=1,
         help="Accumulate gradients over k batches before next optimizer step.")
 
+    trainer_group.add_argument(
+        "--use_experimental_loss", type=bool, default=False,
+        help="Use experimental loss based on structure factors to train.")
+    
     args = parser.parse_args()
 
     if (args.seed is None and

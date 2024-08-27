@@ -7,6 +7,7 @@ from torch.distributions.normal import Normal
 import reciprocalspaceship as rs
 from SFC_Torch.Fmodel import SFcalculator
 from openfold.np import protein, residue_constants
+from openfold.utils.multi_chain_permutation import kabsch_rotation
 
 chain_id_inverse_mapping = {n: cid for n, cid in enumerate(string.ascii_uppercase)}
 
@@ -16,27 +17,37 @@ data_dir_path = os.environ['DATA_DIR']
 residue_list = [residue_constants.restype_1to3[res] for res in residue_constants.restypes]
 residue_list.append('OTHER')
 
-def kabsch_or_fape_align(output_atoms_positions, sfcalculator_corresponding_atoms, weights=None):
+
+def kabsch_align(output_atoms_positions, sfcalculator_corresponding_atoms):
     """
     Reference: https://hunterheidenreich.com/posts/kabsch_algorithm/
     Aligning the output_atoms_positions to sfcalculator_corresponding_atoms
 
-    output_atoms_positions is p
-    sfcalculator_corresponding_atoms is q 
+    output_atoms_positions is P
+    sfcalculator_corresponding_atoms is Q
+
+    This code only computes the translation
     """
-    breakpoint()
-    if weights is None:
-        weights = torch.ones(len(output_atoms_positions), device=output_atoms_positions.device)[:,None]
+
+    # Find the centroid
     output_atoms_centroid = torch.mean(output_atoms_positions, axis=0)
     sfcalculator_atoms_centroid = torch.mean(sfcalculator_corresponding_atoms, axis=0)
 
-    translation = sfcalculator_atoms_centroid - output_atoms_centroid
-    output_atoms_positions -= output_atoms_centroid
-    sfcalculator_corresponding_atoms -= sfcalculator_atoms_centroid
+    # Center the points
+    output_atoms_positions_centered = output_atoms_positions - output_atoms_centroid
+    sfcalculator_corresponding_atoms_centered = sfcalculator_corresponding_atoms - sfcalculator_atoms_centroid
 
-    cross_covariance = output_atoms_positions[:,:,None] @ sfcalculator_corresponding_atoms[:,None,:]
-    # cross_covariance_svd = 
-    return(output_atoms_positions)
+    # Find the rotation
+    rotation = kabsch_rotation(output_atoms_positions_centered, sfcalculator_corresponding_atoms_centered)
+
+    # final points    
+    output_atoms_positions_rotated = (output_atoms_positions_centered @ rotation.T) + sfcalculator_atoms_centroid
+
+    rmsd_0 = torch.sqrt(torch.sum(torch.square(output_atoms_positions - sfcalculator_corresponding_atoms)))/output_atoms_positions.shape[1]
+    rmsd_1 = torch.sqrt(torch.sum(torch.square(output_atoms_positions_rotated - sfcalculator_corresponding_atoms)))/output_atoms_positions_rotated.shape[1]
+    print(f"RMSD was {rmsd_0} before alignment and is now {rmsd_1} after alignment.")
+
+    return(output_atoms_positions_rotated)
 
 def get_experimental_loss(outputs, batch):
     file_ids = []
@@ -114,15 +125,10 @@ def get_experimental_loss(outputs, batch):
             sfcalculator_corresponding_atoms = sfcalculator.atom_pos_orth[sfcalculator_inds] # ground truth
             
             # Align the positions to some reference
-            aligned_pos  = kabsch_or_fape_align(output_atoms_positions, sfcalculator_corresponding_atoms)
-            
+            aligned_pos  = kabsch_align(output_atoms_positions, sfcalculator_corresponding_atoms)
+
             # Replace ground truth PDB with predicted positions of atoms
-            print('XXXXXX')
-            # breakpoint()
-            print(aligned_pos.device)
-            # print(sfcalculator_inds)
-            print(sfcalculator._atom_pos_orth.device)
-            sfcalculator._atom_pos_orth[sfcalculator_inds] = aligned_pos
+            sfcalculator._atom_pos_orth[sfcalculator_inds] = aligned_pos.type(torch.float32)
 
             sfcalculator.calc_fprotein(atoms_position_tensor=sfcalculator._atom_pos_orth, atoms_biso_tensor=None, atoms_occ_tensor=None, atoms_aniso_uw_tensor=None)
             sfcalculator.calc_fsolvent()
