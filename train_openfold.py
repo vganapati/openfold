@@ -126,7 +126,7 @@ class OpenFoldWrapper(pl.LightningModule):
         # Log it
         self._log(loss_breakdown, batch, outputs)
         if args.use_experimental_loss:
-            return loss_experimental
+            return loss + loss_experimental
         else:
             return loss
 
