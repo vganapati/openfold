@@ -154,5 +154,5 @@ def get_experimental_loss(outputs, batch):
             loss_per_sf = -Normal(sfcalculator.Fo,sfcalculator.SigF).log_prob(Fmodel_amplitude)
             total_loss += torch.sum(loss_per_sf)
 
-    print(total_loss)
+    print('Experimental loss is: ', total_loss)
     return(total_loss)
