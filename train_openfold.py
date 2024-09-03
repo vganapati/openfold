@@ -3,6 +3,7 @@ import logging
 import os
 import sys
 import json
+import glob
 
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks.lr_monitor import LearningRateMonitor
@@ -97,7 +98,7 @@ class OpenFoldWrapper(pl.LightningModule):
                 on_step=False, on_epoch=True, logger=True, sync_dist=False,
             )
 
-    def training_step(self, batch, batch_idx):
+    def training_step(self, batch, batch_idx, alpha=1.0):
         if (self.ema.device != batch["aatype"].device):
             self.ema.to(batch["aatype"].device)
 
@@ -122,11 +123,13 @@ class OpenFoldWrapper(pl.LightningModule):
         loss, loss_breakdown = self.loss(
             outputs, batch, _return_breakdown=True
         )
+        loss_breakdown['loss_experimental']=loss_experimental
 
         # Log it
         self._log(loss_breakdown, batch, outputs)
+
         if args.use_experimental_loss:
-            return loss + loss_experimental
+            return loss + alpha*loss_experimental
         else:
             return loss
 
@@ -310,6 +313,11 @@ def main(args):
     model_module = OpenFoldWrapper(config)
 
     if args.resume_from_ckpt:
+        if args.resume_from_ckpt == 'LATEST':
+            folder_path = os.path.join(args.output_dir, args.wandb_project, args.wandb_id, "checkpoints")
+            files = glob.glob(os.path.join(folder_path, '*.ckpt'))
+            args.resume_from_ckpt = max(files, key=os.path.getmtime)
+            print('Resuming from: ', args.resume_from_ckpt)
         if args.resume_model_weights_only:
             # Load the checkpoint
             if os.path.isdir(args.resume_from_ckpt):

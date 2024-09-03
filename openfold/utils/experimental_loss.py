@@ -70,8 +70,12 @@ def get_experimental_loss(outputs, batch):
     num_residues = output_proteins.atom_mask.shape[1]
 
     total_loss = 0
+    nonzero_count = 0
+    total_count = 0
     for ind, file_id in enumerate(file_ids):
+        total_count += 1
         if mtz_files[ind] is not None:
+            nonzero_count += 1
 
             pdb_file = train_data_dir_path + '/' + file_id + '.cif' # can be either .cif or .pdb
             mtz_file = data_dir_path + '/pdb_data/mtz_files/' + file_id + '.mtz' # ground truth download from the PDB for comparison
@@ -155,4 +159,5 @@ def get_experimental_loss(outputs, batch):
             total_loss += torch.sum(loss_per_sf)
 
     print('Experimental loss is: ', total_loss)
+    print('Total mtz file count is ', total_count, ' out of ', nonzero_count)
     return(total_loss)

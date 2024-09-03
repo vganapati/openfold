@@ -13,3 +13,5 @@ cutlass/
 
 .DS_Store
 *.png
+*.err
+*.out
