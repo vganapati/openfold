@@ -83,7 +83,7 @@ def get_experimental_loss(outputs, batch):
 
             # This is necessary before the following calculation, for the solvent percentage and grid size
             # Typically you only have to do it once
-            sfcalculator.inspect_data(spacing=4.5, sample_rate=3.0, verbose=True, dynamic_spacing=True) # solvent percentage and grid size
+            sfcalculator.inspect_data(spacing=4.5, sample_rate=1.0, verbose=True, dynamic_spacing=True) # solvent percentage and grid size
             # The results will be stored in sfcalculator.Fprotein_HKL and sfcalculator.Fmask_HKL, used for future calculation
             # You can also return the tensor by Return=True
 

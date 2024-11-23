@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH -J openfold_train
-#SBATCH -C gpu
+#SBATCH -C gpu&hbm80g
 #SBATCH -q preempt
 #SBATCH --ntasks-per-node=4
 #SBATCH -o %j.out

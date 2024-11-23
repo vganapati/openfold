@@ -7,14 +7,15 @@ from SFC_Torch.Fmodel import SFcalculator
 DATA_DIR = os.environ['DATA_DIR']
 path = DATA_DIR + '/pdb_data/mmcif_files/'
 
-pdb_file = DATA_DIR + '/pdb_data/mmcif_files/6yfa.cif' # can be either .cif or .pdb
-mtz_file = DATA_DIR + '/pdb_data/mtz_files/6yfa.mtz' # ground truth download from the PDB for comparison
+# memory-limiting proteins: 6yfa
+pdb_file = DATA_DIR + '/pdb_data/mmcif_files/1uf2.cif' # can be either .cif or .pdb
+mtz_file = DATA_DIR + '/pdb_data/mtz_files/1uf2.mtz' # ground truth download from the PDB for comparison
 
 sfcalculator = SFcalculator(pdb_file, mtz_file, expcolumns=['FP', 'SIGFP'], set_experiment=True, freeflag='FREE', testset_value=0, random_sample=True)
 
 # This is necessary before the following calculation, for the solvent percentage and grid size
 # Typically you only have to do it once
-sfcalculator.inspect_data(verbose=True, dynamic_spacing=True) # solvent percentage and grid size
+sfcalculator.inspect_data(sample_rate=3.0, verbose=True, dynamic_spacing=True) # solvent percentage and grid size
 
 # The results will be stored in sfcalculator.Fprotein_HKL and sfcalculator.Fmask_HKL, used for future calculation
 # You can also return the tensor by Return=True
