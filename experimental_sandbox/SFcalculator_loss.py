@@ -3,13 +3,20 @@ import reciprocalspaceship as rs
 import torch
 from torch.distributions.normal import Normal
 from SFC_Torch.Fmodel import SFcalculator
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--pdb_id', type=str, default='6yfa', help='4 character PDB identifier')
+
+args = parser.parse_args()
 
 DATA_DIR = os.environ['DATA_DIR']
 path = DATA_DIR + '/pdb_data/mmcif_files/'
 
 # memory-limiting proteins: 6yfa
-pdb_file = DATA_DIR + '/pdb_data/mmcif_files/1uf2.cif' # can be either .cif or .pdb
-mtz_file = DATA_DIR + '/pdb_data/mtz_files/1uf2.mtz' # ground truth download from the PDB for comparison
+pdb_id = args.pdb_id
+pdb_file = DATA_DIR + '/pdb_data/mmcif_files/' + pdb_id + '.cif' # can be either .cif or .pdb
+mtz_file = DATA_DIR + '/pdb_data/mtz_files/' + pdb_id + '.mtz' # ground truth download from the PDB for comparison
 
 sfcalculator = SFcalculator(pdb_file, mtz_file, expcolumns=['FP', 'SIGFP'], set_experiment=True, freeflag='FREE', testset_value=0, random_sample=True)
 
