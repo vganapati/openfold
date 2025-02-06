@@ -5,15 +5,16 @@ Using CUDA 12 directions available [here](https://openfold.readthedocs.io/en/lat
 Start installation:
 ```
 export USERNAME=your_nersc_username
-cd $CFS/m3562/users/$USERNAME
+export PROJECT=mXXX
+cd $CFS/$PROJECT/users/$USERNAME
 git clone https://github.com/vganapati/openfold.git
 cd openfold
 git checkout pl_upgrades
 
 module load conda
-mamba env create -p /global/cfs/cdirs/m3562/users/$USERNAME/openfold_env -f environment.yml
+mamba env create -p /global/cfs/cdirs/$PROJECT/users/$USERNAME/openfold_env -f environment.yml
 
-conda activate /global/cfs/cdirs/m3562/users/$USERNAME/openfold_env
+conda activate /global/cfs/cdirs/$PROJECT/users/$USERNAME/openfold_env
 ```
 
 Check install thus far:
@@ -37,7 +38,7 @@ Finish installation:
 ./scripts/install_third_party_dependencies.sh
 
 conda deactivate
-conda activate /global/cfs/cdirs/m3562/users/$USERNAME/openfold_env
+conda activate /global/cfs/cdirs/$PROJECT/users/$USERNAME/openfold_env
 
 export LIBRARY_PATH=$CONDA_PREFIX/lib:$LIBRARY_PATH
 export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
@@ -49,7 +50,7 @@ bash scripts/download_openfold_soloseq_params.sh openfold/resources/
 
 Execute unit tests in an interactive session:
 ```
-salloc --nodes 1 --qos interactive --time 01:00:00 --constraint gpu --gpus 4 --account=m3562
+salloc --nodes 1 --qos interactive --time 01:00:00 --constraint gpu --gpus 4 --account=${PROJECT}_g
 
 ./scripts/run_unit_tests.sh
 ```
@@ -66,15 +67,15 @@ For the next log-in, follow these steps to run unit tests:
 ```
 module load conda
 export USERNAME=your_username
-cd $CFS/m3562/users/$USERNAME/openfold
+cd $CFS/$PROJECT/users/$USERNAME/openfold
 
-conda activate /global/cfs/cdirs/m3562/users/$USERNAME/openfold_env
+conda activate /global/cfs/cdirs/$PROJECT/users/$USERNAME/openfold_env
 
 export LIBRARY_PATH=$CONDA_PREFIX/lib:$LIBRARY_PATH
 export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
 
-salloc --nodes 1 --qos interactive --time 01:00:00 --constraint gpu --gpus 4 --account=m3562
+salloc --nodes 1 --qos interactive --time 01:00:00 --constraint gpu --gpus 4 --account=${PROJECT}_g
 
 ./scripts/run_unit_tests.sh
 ```
@@ -92,5 +93,5 @@ Run full model with and without using DeepSpeed Evoformer attention kernel
 If necessary:
 ```
 module load conda
-mamba remove -p /global/cfs/cdirs/m3562/users/$USERNAME/openfold_env --all
+mamba remove -p /global/cfs/cdirs/$PROJECT/users/$USERNAME/openfold_env --all
 ```
